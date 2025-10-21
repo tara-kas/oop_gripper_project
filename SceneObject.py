@@ -31,3 +31,7 @@ class Cube(SceneObject):
         self.id = super().load()                # load in object
         self.name = super().update_name("Box")  # give name to object
         
+    @property    
+    @abstractmethod
+    def get_position(self):     # get position in pybullet worldframe
+        pass

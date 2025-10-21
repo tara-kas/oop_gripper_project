@@ -16,7 +16,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-				<mesh filename="cube.obj" scale="0.1 0.1 0.1"/>
+				<mesh filename="cube.obj" scale="0.1 0.1 0.1"/>   <!-- scale must be same as box size -->
       </geometry>
        <material name="red">
         <color rgba="0.83, 0.176, 0.448, 1"/>   <!-- change colour here! -->
@@ -25,7 +25,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-	 	<box size=".1 .1 .1"/>                      <!-- change size here! -->
+	 	<box size=".1 .1 .1"/>                      <!-- change size here! must match scale -->
       </geometry>
     </collision>
   </link>

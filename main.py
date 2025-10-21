@@ -2,6 +2,7 @@ import pybullet as p
 import pybullet_data
 import time
 from SceneObject import SceneObject, Cube
+from Gripper import Gripper, TwoFingerGripper
 import os
 
 if __name__=="__main__":
@@ -28,6 +29,9 @@ if __name__=="__main__":
     planeID = p.loadURDF("plane.urdf")
     
     boxID = Cube(cube_path,(0,0,0.26))
+    
+    gripper1 = TwoFingerGripper()
+    gripper1.load()
     
     for i in range(1000):
         p.stepSimulation()
