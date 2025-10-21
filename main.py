@@ -1,6 +1,7 @@
 import pybullet as p
 import pybullet_data
 import time
+import math
 from SceneObject import SceneObject, Cube
 from Gripper import Gripper, TwoFingerGripper
 import os
@@ -30,8 +31,9 @@ if __name__=="__main__":
     
     boxID = Cube(cube_path,(0,0,0.26))
     
-    gripper1 = TwoFingerGripper()
+    gripper1 = TwoFingerGripper((1,0,1),(0,math.pi/4,math.pi))
     gripper1.load()
+    gripper1.move()
     
     for i in range(1000):
         p.stepSimulation()

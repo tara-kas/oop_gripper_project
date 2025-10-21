@@ -8,7 +8,7 @@ from SceneObject import SceneObject
 class Gripper(ABC, SceneObject):
     """ general gripper class for grasping objects """
     def __init__(self, urdf, position=(0,0,0), orientation=(0,0,0)):
-        super().__init__(urdf, position=(0,0,0), orientation=(0,0,0))
+        super().__init__(urdf, position, orientation)
         self.name = super().update_name("Gripper")  # give name to object
 
         self.constraint_id = None
@@ -28,8 +28,10 @@ class Gripper(ABC, SceneObject):
             parentFramePosition=offset,
             childFramePosition=self.base_position)
     
-    def move(self, z, yaw=0.0):
-        pass
+    def move(self):
+        self.position = (0,0,0) 
+        p.resetBasePositionAndOrientation(self.id, self.position, self.orientation)
+        print(f"{self.name} moved to {self.position}.")
 
     @abstractmethod                                         # all this implementation in child classes
     def open(self):
@@ -54,9 +56,9 @@ class Gripper(ABC, SceneObject):
         pass
 
 class TwoFingerGripper(Gripper):
-    def __init__(self, position=(0.5, 0.3, 0.7)):
-        super().__init__("pr2_gripper.urdf", position)
-        pass
+    def __init__(self, position=(0, 0, 0), orientation=(0,0,0)):
+        super().__init__("pr2_gripper.urdf", position, orientation)
+        self.name = "TwoFingerGripper"
 
     def open(self):
         #  Open gripper fingers
