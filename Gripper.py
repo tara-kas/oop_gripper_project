@@ -1,6 +1,7 @@
 import pybullet as p
 import pybullet_data
 import time
+import math
 from abc import ABC, abstractmethod
 from SceneObject import SceneObject
 # need to import a gripper urdf
@@ -10,11 +11,23 @@ class Gripper(ABC, SceneObject):
     def __init__(self, urdf, position=(0,0,0), orientation=(0,0,0)):
         super().__init__(urdf, position, orientation)
         self.name = super().update_name("Gripper")  # give name to object
+        
+        self.roll, self.pitch, self.yaw = orientation
 
         self.constraint_id = None
         self.grasp_moving = False
         
     # inherits load() function from parent
+    
+    @property
+    def update_orientation(self):
+        return self.roll, self.pitch, self.yaw
+    
+    @update_orientation.setter
+    def update_orientation(self,orientation):
+        self.roll = orientation[0]
+        self.pitch = orientation[1]
+        self.yaw = orientation[2]
     
     def attach_fixed(self, offset):
         """ attach gripper to a fixed world position """
@@ -26,12 +39,31 @@ class Gripper(ABC, SceneObject):
             jointType=p.JOINT_FIXED,
             jointAxis=[0, 0, 0],
             parentFramePosition=offset,
-            childFramePosition=self.base_position)
+            childFramePosition=self.position)
     
-    def move(self):
-        self.position = (0,0,0) 
+    def teleport(self, move_to=(0,0,0), steps=100):
+        self.position = move_to 
         p.resetBasePositionAndOrientation(self.id, self.position, self.orientation)
         print(f"{self.name} moved to {self.position}.")
+    
+    def move(self, x,y,z, roll=None, pitch=None, yaw=None):
+        """Move gripper to a new position and orientation."""
+        print(f"moving gripper to {x},{y},{z}")
+        
+        # if roll, pitch, or yaw aren't given, default to what is already was
+        roll = self.roll if roll is None else roll
+        pitch = self.pitch if pitch is None else pitch
+        yaw = self.yaw if yaw is None else yaw
+        
+        if self.constraint_id is None:
+            raise ValueError("Gripper must be fixed before moving.")
+        p.changeConstraint(
+            self.constraint_id,
+            jointChildPivot=[x,y,z],
+            jointChildFrameOrientation=p.getQuaternionFromEuler([roll, pitch, yaw]),
+            maxForce=20
+        )
+        # p.changeDynamics(self.id, -1, mass=0.00001)         # make mass super small so less inertia and momentum
 
     @abstractmethod                                         # all this implementation in child classes
     def open(self):

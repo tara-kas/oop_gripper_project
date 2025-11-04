@@ -18,6 +18,7 @@ if __name__=="__main__":
     p.resetSimulation()
     p.setGravity(0, 0, -9.81)
     p.setRealTimeSimulation(0)
+    # p.addUserDebugLine((0,0,0)) finish adding the params
     
     # uncomment to change camera angle:
     # p.resetDebugVisualizerCamera(
@@ -29,11 +30,16 @@ if __name__=="__main__":
 
     planeID = p.loadURDF("plane.urdf")
     
-    boxID = Cube(cube_path,(0,0,0.26))
+    boxID = Cube(cube_path,(0,0,-10))
     
     gripper1 = TwoFingerGripper((1,0,1),(0,math.pi/4,math.pi))
     gripper1.load()
-    gripper1.move()
+    # time.sleep(3)
+    gripper1.attach_fixed(0)
+    gripper1.teleport((0.3,0,0.3))
+    time.sleep(5)
+    gripper1.move(1,1,1)
+
     
     for i in range(1000):
         p.stepSimulation()

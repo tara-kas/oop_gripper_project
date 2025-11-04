@@ -28,8 +28,8 @@ class Cube(SceneObject):
     
     def __init__(self, urdf, position=(0,0,0), orientation=(0,0,0)):
         super().__init__(urdf, position=(0,0,0), orientation=(0,0,0))
-        self.id = super().load()                # load in object
-        self.name = super().update_name("Box")  # give name to object
+        self.id = self.load()                # load in object
+        self.name = self.update_name("Box")  # give name to object
         
     @property    
     @abstractmethod
