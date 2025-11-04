@@ -19,6 +19,7 @@ if __name__=="__main__":
     p.resetSimulation()
     p.setGravity(0, 0, -9.81)
     p.setRealTimeSimulation(0)
+    # p.addUserDebugLine((0,0,0)) finish adding the params
     
     # uncomment to change camera angle:
     # p.resetDebugVisualizerCamera(

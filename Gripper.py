@@ -1,6 +1,7 @@
 import pybullet as p
 import pybullet_data
 import time
+import math
 from abc import ABC, abstractmethod
 from SceneObject import SceneObject
 
@@ -10,11 +11,24 @@ class Gripper(ABC, SceneObject):
     def __init__(self, urdf, position=(0,0,0), orientation=(0,0,0)):
         super().__init__(urdf, position, orientation)
         self.name = super().update_name("Gripper")  # give name to object
+        
+        self.roll, self.pitch, self.yaw = orientation
+
         self.roll, self.pitch, self.yaw = orientation
         self.constraint_id = None
         self.grasp_moving = False
         
     # inherits load() function from parent
+    
+    @property
+    def update_orientation(self):
+        return self.roll, self.pitch, self.yaw
+    
+    @update_orientation.setter
+    def update_orientation(self,orientation):
+        self.roll = orientation[0]
+        self.pitch = orientation[1]
+        self.yaw = orientation[2]
     
     @property
     def update_orientation(self):
@@ -41,6 +55,8 @@ class Gripper(ABC, SceneObject):
             childFrameOrientation=quat)
 
     
+    def teleport(self, move_to=(0,0,0), steps=100):
+        self.position = move_to 
     def teleport(self, move_to=(0,0,0), steps=100):
         self.position = move_to 
         p.resetBasePositionAndOrientation(self.id, self.position, self.orientation)
