@@ -16,8 +16,9 @@ class SceneObject:
         
     def load(self):
         """ load object into scene """
-        self.id = p.loadURDF(self.urdf, self.position, self.orientation)
+        self.id = p.loadURDF(self.urdf, self.position, self.orientation, useFixedBase=True)
         return self.id
+
     
     def update_name(self, new_name="default_name"):
         """ initialise or update name of object """
@@ -26,12 +27,29 @@ class SceneObject:
 class Cube(SceneObject):
     """ object to be grabbed by the gripper """
     
-    def __init__(self, urdf, position=(0,0,0), orientation=(0,0,0)):
-        super().__init__(urdf, position=(0,0,0), orientation=(0,0,0))
-        self.id = super().load()                # load in object
-        self.name = super().update_name("Box")  # give name to object
+    def __init__(self, urdf, position=(0,0,0), orientation=(0,0,0), scale=0.8):
+        super().__init__(urdf, position=position, orientation=orientation)  
+        self.scale = scale  
+        self.id = p.loadURDF(self.urdf, self.position, self.orientation, globalScaling=self.scale)
+        self.name = super().update_name("Box")  
+        aabb_min, aabb_max = p.getAABB(self.id)
+        self.grasp_height = aabb_max[2]  
+
+class Cylinder(SceneObject):
+    """Cylinder object to be grabbed by the gripper, with optional scaling."""
+    
+    def __init__(self, urdf, position=(0, 0, 0), orientation=(0, 0, 0), scale=0.8):
+        super().__init__(urdf, position=position, orientation=orientation)
         
-    @property    
-    @abstractmethod
-    def get_position(self):     # get position in pybullet worldframe
-        pass
+        self.scale = scale
+        self.id = p.loadURDF(
+            self.urdf, 
+            self.position, 
+            self.orientation, 
+            globalScaling=self.scale
+        )
+    
+        self.name = super().update_name("Cylinder")
+        
+        aabb_min, aabb_max = p.getAABB(self.id)
+        self.grasp_height = aabb_max[2] + 0.01 

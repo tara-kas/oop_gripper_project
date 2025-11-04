@@ -2,14 +2,15 @@ import pybullet as p
 import pybullet_data
 import time
 import math
-from SceneObject import SceneObject, Cube
-from Gripper import Gripper, TwoFingerGripper
+from SceneObject import SceneObject, Cube, Cylinder
+from Gripper import Gripper, TwoFingerGripper, ThreeFingerGripper
 import os
 
 if __name__=="__main__":
     
     # load in "cube_small.urdf" from objects folder using its path
     cube_path = os.path.join(os.path.dirname(__file__), "objects", "cube_small.urdf")
+    cyl_path = os.path.join(os.path.dirname(__file__), "objects", "cylinder.urdf")
     print(cube_path)
     
     # setup the environment
@@ -29,11 +30,16 @@ if __name__=="__main__":
 
     planeID = p.loadURDF("plane.urdf")
     
-    boxID = Cube(cube_path,(0,0,0.26))
+    # boxID = Cube(cube_path,(0.6,0.3,0.02))
+    cylID = Cylinder(cyl_path,(0,0,0.02))
     
-    gripper1 = TwoFingerGripper((1,0,1),(0,math.pi/4,math.pi))
-    gripper1.load()
-    gripper1.move()
+    # gripper1 = TwoFingerGripper((0, 0, 0.02), (0, 0, 0)) 
+    gripper2 = ThreeFingerGripper(position=(0,0,0.5), orientation=(math.pi,0,0))
+    gripper2.load()
+    gripper2.start()
+    # gripper2.attach_fixed(offset=[0,0,0])
+    gripper2.grasp_and_lift(cylID)
+
     
     for i in range(1000):
         p.stepSimulation()
