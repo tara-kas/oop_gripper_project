@@ -4,6 +4,7 @@ import time
 import math
 from abc import ABC, abstractmethod
 from SceneObject import SceneObject
+import numpy as np
 # need to import a gripper urdf
 
 class Gripper(ABC, SceneObject):
@@ -76,7 +77,7 @@ class Gripper(ABC, SceneObject):
         pass
 
     def get_gripper_pose_relative_to_object(self, obj):
-        #   Return 6D pose features relative to object
+        #   rot_mateturn 6D pose features relative to object
         pass
 
     def execute_grasp_test(self, obj, grasp_pose, lift_height=0.3):
@@ -86,6 +87,70 @@ class Gripper(ABC, SceneObject):
     def is_grasp_successful(self, obj, initial_pos, hold_time=3.0):
         # Check if object remains grasped
         pass
+    
+    def get_random_start_position(radius=2):
+        """initialise gripper at a random position, distance 1 away from the object at origin (0,0,0) 
+        """
+        # generate random angles
+        theta = np.random.uniform(0,2*np.pi)
+        phi = np.random.uniform(0,np.pi/2)    # limit it to top hemisphere (above the plane)
+        
+        # sphere into cartesian coords
+        x = radius * np.sin(phi) * np.cos(theta)
+        y = radius * np.sin(phi) * np.sin(theta)
+        z = radius * np.cos(phi)
+        
+        return np.array([x,y,z])
+    
+    # def orient_towards_origin(pos):
+    #     """compute quarternion given position in (x,y,z) to point towards origin from +Z"""
+    #     # get forward direction
+    #     forward = -pos/np.linalg.norm(pos)
+        
+    #     # make a temp up vector
+    #     up = np.array([0,0,1])
+    #     # check in case too z-axis too parallel for cross product
+    #     if abs(np.dot(forward,up)) > 0.99:
+    #         up = np.array([0,1,0])
+            
+    #     # make right and up vectors
+    #     right = np.cross(up,forward)
+    #     right /= np.linalg.norm(right)
+    #     up = np.cross(forward, right)       # rewrite up as the correct vector
+        
+    #     rot_mat = np.vstack([right,up,forward])
+        
+        # # change rotation matrix (3x3) into euler angle form (roll, pitch, yaw)
+        # sy = np.sqrt(rot_mat[0,0]**2 + rot_mat[1,0]**2)
+        # singular = sy < 1e-6
+
+        # if not singular:
+        #     roll = np.arctan2(rot_mat[2,1], rot_mat[2,2])
+        #     pitch = np.arctan2(-rot_mat[2,0], sy)
+        #     yaw = np.arctan2(rot_mat[1,0], rot_mat[0,0])
+        # else:
+        #     # in case of gimbal lock
+        #     roll = np.arctan2(-rot_mat[1,2], rot_mat[1,1])
+        #     pitch = np.arctan2(-rot_mat[2,0], sy)
+        #     yaw = 0
+        
+        # return (roll,pitch,yaw)
+    
+    def orient_towards_origin(pos):
+        x, y, z = pos
+        
+        # yaw: rotate around Z toward origin
+        yaw = np.arctan2(-y, -x)
+
+        # pitch: tilt down/up to point at origin
+        distance_xy = np.sqrt(x**2 + y**2)
+        pitch = np.arctan2(z, distance_xy)
+
+        # roll: random for variability
+        roll = np.random.uniform(-np.pi, np.pi)  # random roll
+
+        return (roll, pitch, yaw)
+
 
 class TwoFingerGripper(Gripper):
     def __init__(self, position=(0, 0, 0), orientation=(0,0,0)):

@@ -5,9 +5,9 @@ import math
 from SceneObject import SceneObject, Cube
 from Gripper import Gripper, TwoFingerGripper
 import os
+import numpy as np
 
 if __name__=="__main__":
-    
     # load in "cube_small.urdf" from objects folder using its path
     cube_path = os.path.join(os.path.dirname(__file__), "objects", "cube_small.urdf")
     print(cube_path)
@@ -28,17 +28,31 @@ if __name__=="__main__":
     # cameraTargetPosition = [0,0,0]
     # )
 
+    n = 5  # no. of iterations
+    grippers = {}   # initialise the grippers
+    
     planeID = p.loadURDF("plane.urdf")
     
     boxID = Cube(cube_path,(0,0,-10))
     
-    gripper1 = TwoFingerGripper((1,0,1),(0,math.pi/4,math.pi))
-    gripper1.load()
-    # time.sleep(3)
-    gripper1.attach_fixed(0)
-    gripper1.teleport((0.3,0,0.3))
-    time.sleep(5)
-    gripper1.move(1,1,1)
+    # gripper1 = TwoFingerGripper((1,0,1),(0,math.pi/4,math.pi))
+    # gripper1.load()
+    # # time.sleep(3)
+    # gripper1.attach_fixed(0)
+    # gripper1.teleport((0.3,0,0.3))
+    # time.sleep(5)
+    # gripper1.move(1,1,1)
+    
+    for i in range(n):
+        xyz = Gripper.get_random_start_position()
+        rpy = Gripper.orient_towards_origin(xyz)
+        xyz.tolist()
+        grippers[i] = TwoFingerGripper(xyz,rpy)
+        print(xyz)
+        print(rpy)
+        grippers[i].load()
+
+    print(grippers)
 
     
     for i in range(1000):
