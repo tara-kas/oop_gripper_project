@@ -51,6 +51,12 @@ if __name__=="__main__":
         print(xyz)
         print(rpy)
         grippers[i].load()
+        grippers[i].teleport(obj_id=boxID.id)
+        # time.sleep(3)
+        # open gripper
+        # move closer a bit
+        # close gripper
+        # move away
 
     print(grippers)
 

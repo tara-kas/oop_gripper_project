@@ -42,8 +42,30 @@ class Gripper(ABC, SceneObject):
             parentFramePosition=offset,
             childFramePosition=self.position)
     
-    def teleport(self, move_to=(0,0,0), steps=100):
-        self.position = move_to 
+    def teleport(self,obj_id=None, move_to=None, steps=100):
+        
+        if move_to:
+            self.position = np.array(move_to)
+            
+        elif obj_id:
+            # get object position
+            obj_pos, _ = p.getBasePositionAndOrientation(obj_id)
+            obj_pos = np.array(obj_pos)
+            
+            # make gripper position into numpy array
+            self.position = np.array(self.position)
+
+            # get direction vector
+            direction = obj_pos - self.position
+            direction_norm = np.linalg.norm(direction)
+            
+        if direction_norm < 1e-6:
+            raise ValueError("object and gripper have same position")
+        
+        direction /= direction_norm         # normalise vector
+        
+        self.position = obj_pos - direction * 0.45      # offset
+             
         p.resetBasePositionAndOrientation(self.id, self.position, self.orientation)
         print(f"{self.name} moved to {self.position}.")
     
@@ -62,7 +84,7 @@ class Gripper(ABC, SceneObject):
             self.constraint_id,
             jointChildPivot=[x,y,z],
             jointChildFrameOrientation=p.getQuaternionFromEuler([roll, pitch, yaw]),
-            maxForce=20
+            maxForce=100
         )
         # p.changeDynamics(self.id, -1, mass=0.00001)         # make mass super small so less inertia and momentum
 
