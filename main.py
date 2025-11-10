@@ -31,15 +31,39 @@ if __name__=="__main__":
 
     planeID = p.loadURDF("plane.urdf")
     
-    # boxID = Cube(cube_path,(0.6,0.3,0.02))
+    # # boxID = Cube(cube_path,(0.6,0.3,0.02))
     cylID = Cylinder(cyl_path,(0,0,0.02))
+    obj_pos = cylID.position
+    # xyz = Gripper.get_random_start_position()
+    xyz = tuple(Gripper.get_random_start_position())  # convert numpy array to tuple
+    # rpy = (0, 0, 0)   
+    rpy = Gripper.orient_towards_origin(xyz, random_roll=False)
+    
+    gripper1 = TwoFingerGripper(xyz, rpy)
+
     
     # gripper1 = TwoFingerGripper((0, 0, 0.02), (0, 0, 0)) 
-    gripper2 = ThreeFingerGripper(position=(0,0,0.5), orientation=(math.pi,0,0))
-    gripper2.load()
-    gripper2.start()
-    # gripper2.attach_fixed(offset=[0,0,0])
-    gripper2.grasp_and_lift(cylID)
+    # gripper1 = ThreeFingerGripper(position=(0,0,0.5), orientation=(math.pi,0,0))
+    gripper1.load()
+    gripper1.start()
+    gripper1.grasp_and_lift(cylID)
+    gripper1.attach_fixed(target_id=cylID.id)
+
+    # n = 5 
+    # grippers = {} 
+    # for i in range(n):
+    #     xyz = Gripper.get_random_start_position()
+    #     rpy = Gripper.orient_towards_origin(xyz)
+    #     xyz.tolist()
+    #     grippers[i] = TwoFingerGripper(xyz,rpy)
+    #     print(xyz)
+    #     print(rpy)
+    #     grippers[i].load()
+    #     grippers[i].start()
+    #     grippers[i].attach_fixed(offset=[0,0,0])
+        
+    # grippers[0].grasp_and_lift(cylID)
+    # print(grippers)
 
     
     for i in range(1000):
