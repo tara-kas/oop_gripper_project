@@ -63,14 +63,14 @@ class Gripper(ABC, SceneObject):
             childFramePosition=[0, 0, 0],
             childFrameOrientation=[0, 0, 0, 1]
         )
-
-
-
     
     def teleport(self,obj_id=None, move_to=None, steps=100):
         
         if move_to:
             self.position = np.array(move_to)
+            p.resetBasePositionAndOrientation(self.id, self.position, self.orientation)
+            print(f"{self.name} teleported directly to {self.position}.")
+            return
             
         elif obj_id:
             # get object position
@@ -84,15 +84,19 @@ class Gripper(ABC, SceneObject):
             direction = obj_pos - self.position
             direction_norm = np.linalg.norm(direction)
             
-        if direction_norm < 1e-6:
-            raise ValueError("object and gripper have same position")
-        
-        direction /= direction_norm         # normalise vector
-        
-        self.position = obj_pos - direction * 0.45      # offset
-             
-        p.resetBasePositionAndOrientation(self.id, self.position, self.orientation)
-        print(f"{self.name} moved to {self.position}.")
+            if direction_norm < 1e-6:
+                raise ValueError("object and gripper have same position")
+            
+            direction /= direction_norm         # normalise vector
+            
+            self.position = obj_pos - direction * 0.45      # offset
+                
+            p.resetBasePositionAndOrientation(self.id, self.position, self.orientation)
+            print(f"{self.name} moved to {self.position}.")
+            return
+    
+        else:
+            raise ValueError("You must specify either move_to or obj_id.")
     
     def move(self, z, x=None,y=None, roll=None, pitch=None, yaw=None):
         """Move gripper to a new position and orientation."""
@@ -187,19 +191,19 @@ class Gripper(ABC, SceneObject):
         # Check if object remains grasped
         pass
     
-    def get_random_start_position(radius=2):
-        """initialise gripper at a random position, distance 1 away from the object at origin (0,0,0) 
-        """
-        # generate random angles
-        theta = np.random.uniform(0,2*np.pi)
-        phi = np.random.uniform(0,np.pi/2)    # limit it to top hemisphere (above the plane)
+    # def get_random_start_position(radius=2):
+    #     """initialise gripper at a random position, distance 1 away from the object at origin (0,0,0) 
+    #     """
+    #     # generate random angles
+    #     theta = np.random.uniform(0,2*np.pi)
+    #     phi = np.random.uniform(0,np.pi/2)    # limit it to top hemisphere (above the plane)
         
-        # sphere into cartesian coords
-        x = radius * np.sin(phi) * np.cos(theta)
-        y = radius * np.sin(phi) * np.sin(theta)
-        z = radius * np.cos(phi)
+    #     # sphere into cartesian coords
+    #     x = radius * np.sin(phi) * np.cos(theta)
+    #     y = radius * np.sin(phi) * np.sin(theta)
+    #     z = radius * np.cos(phi)
         
-        return np.array([x,y,z])
+    #     return np.array([x,y,z])
     
     # def orient_towards_origin(pos):
     #     """compute quarternion given position in (x,y,z) to point towards origin from +Z"""
@@ -235,20 +239,6 @@ class Gripper(ABC, SceneObject):
         
         # return (roll,pitch,yaw)
     
-    def orient_towards_origin(pos):
-        x, y, z = pos
-        
-        # yaw: rotate around Z toward origin
-        yaw = np.arctan2(-y, -x)
-
-        # pitch: tilt down/up to point at origin
-        distance_xy = np.sqrt(x**2 + y**2)
-        pitch = np.arctan2(z, distance_xy)
-
-        # roll: random for variability
-        roll = np.random.uniform(-np.pi, np.pi)  # random roll
-
-        return (roll, pitch, yaw)
 
 
 
@@ -286,6 +276,7 @@ class TwoFingerGripper(Gripper):
         self.teleport(move_to=(x_g, y_g, z_g))
 
         # Turn gripper to face object
+        self.attach_fixed(obj.id)
         self.move(z=z_g, x=x_g, y=y_g, yaw=yaw_g)
 
         # --- Move forward towards object to grasp ---
