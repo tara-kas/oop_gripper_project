@@ -34,6 +34,7 @@ class Cube(SceneObject):
         self.name = super().update_name("Box")  
         aabb_min, aabb_max = p.getAABB(self.id)
         self.grasp_height = aabb_max[2]  
+        self.grasp_offset = 0.13    # half of the diagonal + a small margin
 
 class Cylinder(SceneObject):
     """Cylinder object to be grabbed by the gripper, with optional scaling."""
@@ -53,3 +54,4 @@ class Cylinder(SceneObject):
         
         aabb_min, aabb_max = p.getAABB(self.id)
         self.grasp_height = aabb_max[2] + 0.01 
+        self.grasp_offset = 0.12    # radius + small margin

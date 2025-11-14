@@ -34,49 +34,63 @@ if __name__=="__main__":
     
     planeID = p.loadURDF("plane.urdf")
     
-    boxID = Cube(cube_path,(0.6,0.3,0.02))
-    cylID = Cylinder(cyl_path,(0,0,0.02))
-    obj_pos = cylID.position
-    # xyz = Gripper.get_random_start_position()
+    boxID = Cube(cube_path,(0,0,0.05))  # z is half the height of the cube
+ 
     xyz = tuple(Gripper.get_random_start_position())  # convert numpy array to tuple
     # rpy = (0, 0, 0)   
     rpy = Gripper.orient_towards_origin(xyz, random_roll=False)
     
     gripper1 = TwoFingerGripper(xyz, rpy)
+    
+    # OBJECT 1: CUBE
+    for i in range(n):
+        xyz = Gripper.get_random_start_position()
+        rpy = Gripper.orient_towards_origin(xyz)
+        xyz.tolist()
+        gripper = TwoFingerGripper(xyz,rpy)
+        print(xyz)
+        print(rpy)
+        gripper.load()
+        gripper.teleport(obj_id=boxID.id, offset=boxID.grasp_offset)
+        print(f"trial {i+1} w/ cube")
+        time.sleep(1)
+        # open gripper
+        gripper.grasp_and_lift(boxID)
         
-    # grippers[0].grasp_and_lift(cylID)
-    # print(grippers)
-    # gripper1 = TwoFingerGripper((1,0,1),(0,math.pi/4,math.pi))
-    # gripper1.load()
-    # # time.sleep(3)
-    # gripper1.attach_fixed(0)
-    # gripper1.teleport((0.3,0,0.3))
-    # time.sleep(5)
-    # gripper1.move(1,1,1)
+        # ADD LOGIC result (success or failure) into dict
+        grippers[gripper] = None
+        
+        p.removeBody(gripper.id)
+
+        # move closer a bit
+        # close gripper
+        # move away
+    
+    p.removeBody(boxID.id)
+        
+    # OBJECT 2: CLYINDER
+    cylID = Cylinder(cyl_path,(0,0,0.02))
     
     for i in range(n):
         xyz = Gripper.get_random_start_position()
         rpy = Gripper.orient_towards_origin(xyz)
         xyz.tolist()
-        grippers[i] = TwoFingerGripper(xyz,rpy)
+        gripper = TwoFingerGripper(xyz,rpy)
         print(xyz)
         print(rpy)
-        grippers[i].load()
-        grippers[i].teleport(obj_id=boxID.id)
-        # time.sleep(3)
+        gripper.load()
+        gripper.teleport(obj_id=cylID.id, offset=cylID.grasp_offset)
+        print(f"trial {i+1} w/ cylinder")
+        time.sleep(1)
         # open gripper
-        grippers[i].grasp_and_lift(boxID)
-        grippers[i].attach_fixed(target_id=boxID.id)
-        # move closer a bit
-        # close gripper
-        # move away
+        gripper.grasp_and_lift(cylID)
         
-    # gripper1 = TwoFingerGripper((0, 0, 0.02), (0, 0, 0)) 
-    # # gripper1 = ThreeFingerGripper(position=(0,0,0.5), orientation=(math.pi,0,0))
-    # gripper1.load()
-    # gripper1.start()
-    # gripper1.grasp_and_lift(cylID)
-    # gripper1.attach_fixed(target_id=cylID.id)
+        # ADD LOGIC result (success or failure) into dict
+        grippers[gripper] = None
+        
+        p.removeBody(gripper.id)
+        
+    p.removeBody(cylID.id)
 
     print(grippers)
 
@@ -86,4 +100,5 @@ if __name__=="__main__":
         time.sleep(1./240.)
     
     p.disconnect()
+    
     
