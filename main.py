@@ -53,12 +53,17 @@ if __name__=="__main__":
         gripper.load()
         gripper.teleport(obj_id=boxID.id, offset=boxID.grasp_offset)
         print(f"trial {i+1} w/ cube")
-        time.sleep(1)
+        # time.sleep(1)
         # open gripper
         gripper.grasp_and_lift(boxID)
-        
+        print(f"{gripper.position} after grasp and lift")
+       
         # ADD LOGIC result (success or failure) into dict
         grippers[gripper] = None
+        
+         # reset cube to origin after gripper is done
+        boxID.position = (0, 0, 0.05)
+        p.resetBasePositionAndOrientation(boxID.id, boxID.position, boxID.orientation)
         
         p.removeBody(gripper.id)
 
@@ -81,12 +86,16 @@ if __name__=="__main__":
         gripper.load()
         gripper.teleport(obj_id=cylID.id, offset=cylID.grasp_offset)
         print(f"trial {i+1} w/ cylinder")
-        time.sleep(1)
+        # time.sleep(1)
         # open gripper
         gripper.grasp_and_lift(cylID)
         
         # ADD LOGIC result (success or failure) into dict
         grippers[gripper] = None
+        
+        # reset cylinder to origin after gripper is done
+        cylID.position = (0, 0, 0.02)
+        p.resetBasePositionAndOrientation(cylID.id, cylID.position, cylID.orientation)
         
         p.removeBody(gripper.id)
         

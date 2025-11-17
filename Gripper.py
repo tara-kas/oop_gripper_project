@@ -65,9 +65,9 @@ class Gripper(ABC, SceneObject):
         )
     
     def teleport(self,obj_id=None, move_to=None, steps=100, offset=0.12):
-        
         if move_to:
-            self.position = np.array(move_to)
+            # create a copy of the position to avoid shared references
+            self.position = np.array(move_to).copy()
             p.resetBasePositionAndOrientation(self.id, self.position, self.orientation)
             print(f"{self.name} teleported directly to {self.position}.")
             return
@@ -78,10 +78,10 @@ class Gripper(ABC, SceneObject):
             obj_pos = np.array(obj_pos)
             
             # make gripper position into numpy array
-            self.position = np.array(self.position)
+            current_pos = np.array(self.position)
 
             # get direction vector
-            direction = obj_pos - self.position
+            direction = obj_pos - current_pos
             direction_norm = np.linalg.norm(direction)
             
             if direction_norm < 1e-6:
@@ -228,21 +228,22 @@ class TwoFingerGripper(Gripper):
         grasp_height = obj.grasp_height
         p.changeDynamics(obj.id, -1, lateralFriction=2.0, rollingFriction=0.1, spinningFriction=0.1)
         p.changeDynamics(self.id, -1, lateralFriction=2.0, rollingFriction=0.1, spinningFriction=0.1)
-        x_g, y_g, z_g, yaw_g = self.compute_approach_pose(obj.position, approach_distance=0.3)
-        self.teleport(move_to=(x_g, y_g, z_g))
+        
+        # no need to move twice..?
+        # self.teleport(obj_id=obj.id, offset=0.25)  # Increased offset for safety
 
-        # Turn gripper to face object
+        # turn gripper to face object
         self.attach_fixed(obj.id)
-        self.move(z=z_g, x=x_g, y=y_g, yaw=yaw_g)
-
-        # --- Move forward towards object to grasp ---
+        
+        # move forward towards object to grasp
         num_steps = 80
+        current_pos = np.array(self.position)
         for i in range(num_steps):
             # interpolate from current to object center
-            x_step = x_g + (obj.position[0] - x_g) * (i / num_steps)
-            y_step = y_g + (obj.position[1] - y_g) * (i / num_steps)
-            z_step = z_g + (obj.position[2] - z_g) * (i / num_steps)
-            self.move(z=z_step, x=x_step, y=y_step, yaw=yaw_g)
+            x_step = current_pos[0] + (obj.position[0] - current_pos[0]) * (i / num_steps)
+            y_step = current_pos[1] + (obj.position[1] - current_pos[1]) * (i / num_steps)
+            z_step = current_pos[2] + (obj.position[2] - current_pos[2]) * (i / num_steps)
+            self.move(z=z_step, x=x_step, y=y_step)
             p.stepSimulation()
             time.sleep(1./240.)
 
@@ -325,10 +326,10 @@ class ThreeFingerGripper(Gripper):
         # Friction settings
         p.changeDynamics(obj.id, -1, lateralFriction=2.0, rollingFriction=0.1, spinningFriction=0.1)
         p.changeDynamics(self.id, -1, lateralFriction=2.0, rollingFriction=0.1, spinningFriction=0.1)
-
-        # Move above the object
-        self.teleport(move_to=(obj.position[0], obj.position[1], obj.position[2] + 0.2))
-
+        
+        # move gripper to object w/ offset
+        self.teleport(obj_id=obj.id, offset=0.25)  # Increased offset for safety
+        
         # Lower to grasp height
         self.move(grasp_height, x=obj.position[0], y=obj.position[1])
         for _ in range(100):
