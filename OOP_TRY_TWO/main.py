@@ -106,6 +106,7 @@ def collect_grasp_data(gripper_class, obj, num_samples, radius=1, add_noise=True
             lift_height=0.35,
             hold_time=3.0
         )
+        print(f"success: {success}")
         
         print(f"Grasp {'SUCCESS' if success else 'FAILURE'}")
         
@@ -181,7 +182,7 @@ def main():
     all_data = []
     
     # Define gripper-object combinations
-    gripper_classes = [ThreeFingerGripper]
+    gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
     object_configs = [
         (Cube, cube_urdf, (0, 0, 0.025)),      # Cube at origin
         (Cylinder, cylinder_urdf, (0, 0, 0.02))  # Cylinder at origin

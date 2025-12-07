@@ -129,7 +129,7 @@ class Gripper(ABC):
                 maxForce=100
             )
     
-    def grasp_and_lift(self, obj, approach_offset=0.15, lift_height=0.3, hold_time=3.0):
+    def grasp_and_lift(self, obj, approach_offset=0.15, lift_height=0.3, hold_time=1.0):
         """
         Execute full grasp sequence: approach, grasp, lift, hold, retract.
         Returns True if grasp is successful (object stays grasped).
@@ -179,7 +179,7 @@ class Gripper(ABC):
         
         # Step 4: Close gripper (fast)
         self.close()
-        for _ in range(20):
+        for _ in range(50):
             p.stepSimulation()
             time.sleep(1./240.)
         
@@ -207,15 +207,15 @@ class Gripper(ABC):
         self._position = lift_pos
         
         # Step 6: Hold and check success
-        success = self._check_grasp_success(obj, hold_time)
+
         
         # Step 7: Retract back to starting position
-        self._retract_to(start_pos, start_orn)
+        success = self._retract_to(start_pos, obj, start_orn, hold_time=3.0) 
         
         return success
 
-    def _retract_to(self, position, orientation_euler, steps=40):
-        """Retract gripper back to start position, maintaining grip, then release."""
+    def _retract_to(self, position, obj, orientation_euler, hold_time=3.0, steps=40):
+        """Retract gripper back to start position, maintaining grip, check success, then release."""
         target_pos = np.array(position)
         target_orn = np.array(orientation_euler)
         start_pos = self._position.copy()
@@ -244,37 +244,40 @@ class Gripper(ABC):
         self._orientation_euler = target_orn
         self._orientation_quat = p.getQuaternionFromEuler(target_orn)
         
+        success = self._check_grasp_success(obj, hold_time)
+        
         # Now release the object
         self.open()
         for _ in range(20):
             p.stepSimulation()
             time.sleep(1./240.)
+            
+        return success
     
     @abstractmethod
     def _apply_grip_force(self):
         """Apply continuous grip force during lifting."""
         pass
     
-    def _check_grasp_success(self, obj, hold_time=1.0):
-        """Check if object remains grasped for hold_time seconds."""
-        gripper_pos = self._position.copy()
-        steps = int(hold_time * 240)  # 240 Hz simulation
+    def _check_grasp_success(self, obj, hold_time=3.0, max_distance=0.35):
+        steps = int(hold_time * 240)
         
-        for step in range(steps):
+        for _ in range(steps):
             self._apply_grip_force()
             p.stepSimulation()
-            # No sleep - run physics quickly
             
-            # Check object position periodically
-            if step % 60 == 0:
-                obj_pos, _ = p.getBasePositionAndOrientation(obj.id)
-                # Object should stay near gripper height
-                if obj_pos[2] < gripper_pos[2] - 0.15:
-                    return False
-        
-        # Final check
-        obj_pos, _ = p.getBasePositionAndOrientation(obj.id)
-        return obj_pos[2] > gripper_pos[2] - 0.1
+            # Get positions as numpy arrays immediately
+            g_pos = np.array(p.getBasePositionAndOrientation(self.id)[0])
+            o_pos = np.array(p.getBasePositionAndOrientation(obj.id)[0])
+            
+            # np.linalg.norm calculates Euclidean distance automatically
+            # choose 3D in case the object flies up w/ the gripper but is let go
+            if np.linalg.norm(g_pos - o_pos) > max_distance:
+                print(f"dist btwn: {np.linalg.norm(g_pos - o_pos)}")
+                return False
+                
+        print(f"dist btwn: {np.linalg.norm(g_pos - o_pos)}")
+        return True
     
     def get_pose_relative_to_object(self, obj):
         """Get gripper pose (x, y, z, roll, pitch, yaw) relative to object."""
