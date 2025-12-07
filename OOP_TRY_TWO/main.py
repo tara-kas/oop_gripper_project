@@ -131,35 +131,11 @@ def collect_grasp_data(gripper_class, obj, num_samples, radius=1, add_noise=True
     return data
 
 
-def balance_dataset(df, target_per_class=None):
-    """
-    Balance dataset to have equal positive and negative samples.
-    
-    Args:
-        df: pandas DataFrame with 'success' column
-        target_per_class: Target samples per class (None = use minority class size)
-    
-    Returns:
-        Balanced DataFrame
-    """
-    success_df = df[df['success'] == 1]
-    failure_df = df[df['success'] == 0]
-    
-    if target_per_class is None:
-        target_per_class = min(len(success_df), len(failure_df))
-    
-    if len(success_df) > target_per_class:
-        success_df = success_df.sample(n=target_per_class, random_state=42)
-    if len(failure_df) > target_per_class:
-        failure_df = failure_df.sample(n=target_per_class, random_state=42)
-    
-    balanced_df = pd.concat([success_df, failure_df]).sample(frac=1, random_state=42)
-    return balanced_df.reset_index(drop=True)
 
 
 def main():
     # Configuration
-    SAMPLES_PER_COMBINATION = 30  # 30 samples x 4 combinations = 120 total
+    SAMPLES_PER_COMBINATION = 10  # 30 samples x 4 combinations = 120 total
     RADIUS = 2  # Distance from object for starting position
     USE_GUI = True
     
@@ -184,7 +160,7 @@ def main():
     gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
     object_configs = [
         (Cube, cube_urdf, (0, 0, 0.025)),      # Cube at origin
-        (Cylinder, cylinder_urdf, (0, 0, 0.02))  # Cylinder at origin
+        # (Cylinder, cylinder_urdf, (0, 0, 0.02))  # Cylinder at origin
     ]
     
     # Collect data for each combination
@@ -222,22 +198,20 @@ def main():
     print(f"Successful grasps: {df['success'].sum()}")
     print(f"Failed grasps: {len(df) - df['success'].sum()}")
     print(f"Success rate: {df['success'].mean()*100:.1f}%")
+
     
-    # Balance the dataset
-    balanced_df = balance_dataset(df)
-    
-    print(f"\nBalanced dataset: {len(balanced_df)} samples")
-    print(f"  Successful: {balanced_df['success'].sum()}")
-    print(f"  Failed: {len(balanced_df) - balanced_df['success'].sum()}")
+    print(f"\nBalanced dataset: {len(df)} samples")
+    print(f"  Successful: {df['success'].sum()}")
+    print(f"  Failed: {len(df) - df['success'].sum()}")
     
     # Save to CSV
     output_path = os.path.join(base_path, "grasp_dataset.csv")
-    balanced_df.to_csv(output_path, index=False)
+    df.to_csv(output_path, index=False)
     print(f"\nDataset saved to: {output_path}")
     
     # Display sample of data
     print("\nSample of collected data:")
-    print(balanced_df.head(10).to_string())
+    print(df.head(10).to_string())
     
     # Keep simulation running briefly to view final state
     print("\nSimulation complete. Closing in 5 seconds...")
@@ -247,7 +221,7 @@ def main():
     
     p.disconnect()
     
-    return balanced_df
+    return df
 
 
 if __name__ == "__main__":
