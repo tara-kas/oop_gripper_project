@@ -11,7 +11,6 @@ CYLINDER_URDF = os.path.join(BASE_PATH, "objects", "cylinder.urdf")
 # for data collection
 SAMPLES_PER_COMBINATION = 30
 RADIUS = 2                     # distance from object for starting position
-USE_GUI = True
 
 # output paths
 DATASET_PATH = os.path.join(BASE_PATH, "grasp_dataset.csv")
@@ -22,7 +21,7 @@ def setup_environment(gui=None):
     initialize PyBullet environment
     
     args:
-        gui: If True, use GUI mode; if None, uses USE_GUI from config
+        gui: If True, use GUI mode; if None, uses DIRECT mode (headless)
         
     returns:
         physics_client: PyBullet physics client ID
