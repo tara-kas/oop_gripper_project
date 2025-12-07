@@ -129,7 +129,7 @@ class Gripper(ABC):
                 maxForce=100
             )
     
-    def grasp_and_lift(self, obj, approach_offset=0.15, lift_height=0.3, hold_time=1.0):
+    def grasp_and_lift(self, obj, approach_offset=0.15, lift_height=0.3, hold_time=3.0):
         """
         Execute full grasp sequence: approach, grasp, lift, hold, retract.
         Returns True if grasp is successful (object stays grasped).
@@ -210,7 +210,7 @@ class Gripper(ABC):
 
         
         # Step 7: Retract back to starting position
-        success = self._retract_to(start_pos, obj, start_orn, hold_time=3.0) 
+        success = self._retract_to(start_pos, obj, start_orn, hold_time) 
         
         return success
 
