@@ -1,6 +1,7 @@
 import pybullet as p
 import time
 import os
+import math
 import numpy as np
 from abc import ABC, abstractmethod
 
@@ -378,6 +379,7 @@ class ThreeFingerGripper(Gripper):
         super().__init__(urdf_path, position, orientation)
         self.name = "ThreeFingerGripper"
         self.finger_joints = []
+        self.base_orientation = np.array([math.pi, 0, 0])  # default orientation is now upside down
         
     def _initialize_joints(self):
         """Set initial joint positions for SDH gripper."""
@@ -386,6 +388,27 @@ class ThreeFingerGripper(Gripper):
         
         for i in self.finger_joints:
             p.resetJointState(self.id, i, -0.5)
+    
+    @staticmethod  
+    def orient_towards_origin(pos, add_noise=False):
+        """Calculate orientation to face origin, with base upside-down rotation."""
+        x, y, z = pos
+        
+        yaw = np.arctan2(-y, -x)
+        distance_xy = np.sqrt(x**2 + y**2)
+        pitch = np.arctan2(z, distance_xy)
+        
+        if add_noise:
+            roll = np.random.uniform(-0.15, 0.15)
+            pitch += np.random.uniform(-0.1, 0.1)
+            yaw += np.random.uniform(-0.1, 0.1)
+        else:
+            roll = 0.0
+        
+        
+        roll += math.pi  # base upside down orientation
+        
+        return np.array([roll, pitch, yaw])
     
     def get_finger_joints(self):
         return self.finger_joints

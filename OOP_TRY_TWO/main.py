@@ -3,6 +3,7 @@ Grasp Data Collection Pipeline
 Generates grasp dataset by sampling random gripper poses and testing grasp success.
 """
 
+import math
 import pybullet as p
 import pybullet_data
 import time
@@ -171,7 +172,7 @@ def main():
     all_data = []
     
     # Define gripper-object combinations
-    gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
+    gripper_classes = [ThreeFingerGripper]
     object_configs = [
         (Cube, cube_urdf, (0, 0, 0.025)),      # Cube at origin
         (Cylinder, cylinder_urdf, (0, 0, 0.02))  # Cylinder at origin
