@@ -317,7 +317,7 @@ class Gripper(ABC):
         
         yaw = np.arctan2(-y, -x)
         distance_xy = np.sqrt(x**2 + y**2)
-        pitch = np.arctan2(z, distance_xy)
+        pitch = np.arctan2(-z, distance_xy)
         
         if add_noise:
             roll = np.random.uniform(-0.15, 0.15)
@@ -391,22 +391,22 @@ class ThreeFingerGripper(Gripper):
     
     @staticmethod  
     def orient_towards_origin(pos, add_noise=False):
-        """Calculate orientation to face origin, with base upside-down rotation."""
         x, y, z = pos
         
-        yaw = np.arctan2(-y, -x)
         distance_xy = np.sqrt(x**2 + y**2)
-        pitch = np.arctan2(z, distance_xy)
+        if distance_xy < 0.05:
+            roll = math.pi
+            pitch = 0.0
+            yaw = 0.0
+        else:
+            yaw = np.arctan2(-y, -x)
+            pitch = -np.arctan2(z, distance_xy)
+            roll = math.pi 
         
         if add_noise:
-            roll = np.random.uniform(-0.15, 0.15)
+            roll += np.random.uniform(-0.15, 0.15)
             pitch += np.random.uniform(-0.1, 0.1)
             yaw += np.random.uniform(-0.1, 0.1)
-        else:
-            roll = 0.0
-        
-        
-        roll += math.pi  # base upside down orientation
         
         return np.array([roll, pitch, yaw])
     
