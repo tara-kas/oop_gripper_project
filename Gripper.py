@@ -235,14 +235,28 @@ class TwoFingerGripper(Gripper):
         # turn gripper to face object
         self.attach_fixed(obj.id)
         
-        # move forward towards object to grasp
-        num_steps = 80
+        # move forward towards object to grasp, but stop short to avoid pushing
+        num_steps = 50
         current_pos = np.array(self.position)
+        obj_pos = np.array(obj.position)
+        
+        # Calculate direction from gripper to object
+        direction_to_obj = obj_pos - current_pos
+        distance = np.linalg.norm(direction_to_obj)
+        
+        # Stop 0.08m before object center (adjust if needed)
+        stop_distance = 0.1
+        if distance > stop_distance:
+            direction_to_obj = direction_to_obj / distance  # normalize
+            target_pos = obj_pos - direction_to_obj * stop_distance
+        else:
+            target_pos = current_pos  # already close enough
+        
         for i in range(num_steps):
-            # interpolate from current to object center
-            x_step = current_pos[0] + (obj.position[0] - current_pos[0]) * (i / num_steps)
-            y_step = current_pos[1] + (obj.position[1] - current_pos[1]) * (i / num_steps)
-            z_step = current_pos[2] + (obj.position[2] - current_pos[2]) * (i / num_steps)
+            t = (i + 1) / num_steps
+            x_step = current_pos[0] + (target_pos[0] - current_pos[0]) * t
+            y_step = current_pos[1] + (target_pos[1] - current_pos[1]) * t
+            z_step = current_pos[2] + (target_pos[2] - current_pos[2]) * t
             self.move(z=z_step, x=x_step, y=y_step)
             p.stepSimulation()
             time.sleep(1./240.)
@@ -259,7 +273,7 @@ class TwoFingerGripper(Gripper):
         for joint in [0, 2]:
             p.setJointMotorControl2(self.id, joint, p.POSITION_CONTROL,
                                     targetPosition=0.12, force=300, maxVelocity=2)
-        for _ in range(100):  # allow contact to form
+        for _ in range(200):  # allow contact to form
             p.stepSimulation()
             time.sleep(1./240.)
 
