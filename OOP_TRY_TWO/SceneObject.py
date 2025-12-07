@@ -83,7 +83,7 @@ class Cube(SceneObject):
 class Cylinder(SceneObject):
     """Cylinder object for grasping experiments."""
     
-    def __init__(self, urdf, position=(0, 0, 0), orientation=(0, 0, 0), scale=0.8):
+    def __init__(self, urdf, position=(0, 0, 0), orientation=(1.5708, 0, 0), scale=1.5):
         super().__init__(urdf, position, orientation, scale)
         self.name = "Cylinder"
         self.id = self.load()

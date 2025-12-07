@@ -142,13 +142,13 @@ def main():
     # Paths to object URDFs
     base_path = os.path.dirname(__file__)
     cube_urdf = os.path.join(base_path, "objects", "cube_small.urdf")
-    cylinder_urdf = os.path.join(base_path, "objects", "cylinder.urdf")
+    cylinder_urdf = os.path.join(base_path, "objects", "duck_vhacd.urdf")
     
     # If local URDFs don't exist, use pybullet_data
     if not os.path.exists(cube_urdf):
         cube_urdf = "cube_small.urdf"
     if not os.path.exists(cylinder_urdf):
-        cylinder_urdf = "cylinder.urdf"
+        cylinder_urdf = "duck_vhacd.urdf"  
     
     # Setup environment
     print("Setting up PyBullet environment...")
@@ -157,10 +157,10 @@ def main():
     all_data = []
     
     # Define gripper-object combinations
-    gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
+    gripper_classes = [ThreeFingerGripper]
     object_configs = [
-        (Cube, cube_urdf, (0, 0, 0.025)),      # Cube at origin
-        # (Cylinder, cylinder_urdf, (0, 0, 0.02))  # Cylinder at origin
+        # (Cube, cube_urdf, (0, 0, 0.025)),      # Cube at origin
+        (Cylinder, cylinder_urdf, (0, 0, 0.02))  # Cylinder at origin
     ]
     
     # Collect data for each combination
