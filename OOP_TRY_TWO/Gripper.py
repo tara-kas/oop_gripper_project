@@ -317,7 +317,7 @@ class Gripper(ABC):
         
         yaw = np.arctan2(-y, -x)
         distance_xy = np.sqrt(x**2 + y**2)
-        pitch = np.arctan2(-z, distance_xy)
+        pitch = np.arctan2(z, distance_xy)
         
         if add_noise:
             roll = np.random.uniform(-0.15, 0.15)
@@ -393,8 +393,8 @@ class ThreeFingerGripper(Gripper):
     def orient_towards_origin(pos, add_noise=False):
         x, y, z = pos
         
-        distance_xy = np.sqrt(x**2 + y**2)
-        if distance_xy < 0.05:
+        distance_xy = np.sqrt(z**2 + y**2)
+        if distance_xy < 5:
             roll = math.pi
             pitch = 0.0
             yaw = 0.0
@@ -403,10 +403,10 @@ class ThreeFingerGripper(Gripper):
             pitch = -np.arctan2(z, distance_xy)
             roll = math.pi 
         
-        if add_noise:
-            roll += np.random.uniform(-0.15, 0.15)
-            pitch += np.random.uniform(-0.1, 0.1)
-            yaw += np.random.uniform(-0.1, 0.1)
+        # if add_noise:
+        #     roll += np.random.uniform(-0.15, 0.15)
+        #     pitch += np.random.uniform(-0.1, 0.1)
+        #     yaw += np.random.uniform(-0.1, 0.1)
         
         return np.array([roll, pitch, yaw])
     
