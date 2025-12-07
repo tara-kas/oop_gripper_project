@@ -79,6 +79,15 @@ def collect_grasp_data(gripper_class, obj, num_samples, radius=1, add_noise=True
         # Create and load gripper
         gripper = gripper_class(position=start_pos, orientation=orientation)
         gripper.load()
+
+        print(f"Gripper orientation - Roll: {orientation[0]:.3f}, Pitch: {orientation[1]:.3f}, Yaw: {orientation[2]:.3f}")
+        gripper_pos, gripper_orn = p.getBasePositionAndOrientation(gripper.id)
+        rot_matrix = p.getMatrixFromQuaternion(gripper_orn)
+        z_axis = np.array([rot_matrix[2], rot_matrix[5], rot_matrix[8]]) 
+        z_end = np.array(gripper_pos) + z_axis * 0.2
+        p.addUserDebugLine(gripper_pos, z_end, [0, 0, 1], 3, lifeTime=10)  
+        p.addUserDebugLine(gripper_pos, obj.position, [1, 0, 0], 2, lifeTime=10) 
+
         gripper.create_constraint()
         
         # Allow gripper to settle
