@@ -106,7 +106,6 @@ def collect_grasp_data(gripper_class, obj, num_samples, radius=1, add_noise=True
             lift_height=0.35,
             hold_time=3.0
         )
-        print(f"success: {success}")
         
         print(f"Grasp {'SUCCESS' if success else 'FAILURE'}")
         
