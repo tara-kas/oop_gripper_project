@@ -27,18 +27,18 @@ from data_collection import (
 
 def main():
     global CUBE_URDF, CYLINDER_URDF
-    USE_GUI = True
+
     
     # Paths to object URDFs
     base_path = os.path.dirname(__file__)
     cube_urdf = os.path.join(base_path, "objects", "cube_small.urdf")
-    cylinder_urdf = os.path.join(base_path, "objects", "cylinder.urdf")
+    cylinder_urdf = os.path.join(base_path, "objects", "duck_vhacd.urdf")
     
     # If local URDFs don't exist, use pybullet_data
     if not os.path.exists(cube_urdf):
         cube_urdf = "cube_small.urdf"
     if not os.path.exists(cylinder_urdf):
-        cylinder_urdf = "cylinder.urdf"
+        cylinder_urdf = "duck_vhacd.urdf"
     
     # setup environment
     print("Setting up PyBullet environment...")
