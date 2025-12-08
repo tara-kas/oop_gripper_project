@@ -15,9 +15,9 @@ from SceneObject import Cube, Cylinder
 from Gripper import TwoFingerGripper, ThreeFingerGripper
 
 from config import (
-    BASE_PATH, CUBE_URDF, CYLINDER_URDF, 
+    BASE_PATH, CUBE_URDF, DUCK_URDF, 
     SAMPLES_PER_COMBINATION, RADIUS, USE_GUI,
-    DATASET_PATH, setup_environment
+    DATASET_PATH, MODEL_PATH, setup_environment
 )
 
 from data_collection import (
@@ -25,20 +25,20 @@ from data_collection import (
     print_dataset_statistics
 )
 
-def main():
-    global CUBE_URDF, CYLINDER_URDF
+from classify import (
+    load_dataset,
+    train_classifier,
+    predict_grasp
+)
 
-    
-    # Paths to object URDFs
-    base_path = os.path.dirname(__file__)
-    cube_urdf = os.path.join(base_path, "objects", "cube_small.urdf")
-    cylinder_urdf = os.path.join(base_path, "objects", "duck_vhacd.urdf")
+def main():
+    global CUBE_URDF, DUCK_URDF
     
     # If local URDFs don't exist, use pybullet_data
-    if not os.path.exists(cube_urdf):
-        cube_urdf = "cube_small.urdf"
-    if not os.path.exists(cylinder_urdf):
-        cylinder_urdf = "duck_vhacd.urdf"
+    if not os.path.exists(CUBE_URDF):
+        CUBE_URDF = "cube_small.urdf"
+    if not os.path.exists(DUCK_URDF):
+        DUCK_URDF = "duck_vhacd.urdf"
     
     # setup environment
     print("Setting up PyBullet environment...")
@@ -49,8 +49,8 @@ def main():
     # Define gripper-object combinations
     gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
     object_configs = [
-        (Cube, cube_urdf, (0, 0, 0.025)),      # Cube at origin
-        # (Cylinder, cylinder_urdf, (0, 0, 0.02))  # Cylinder at origin
+        (Cube, CUBE_URDF, (0, 0, 0.025)),      # Cube at origin
+        # (Duck, duck_urdf, (0, 0, 0.02))  # Cylinder at origin
     ]
     
     # collect data
@@ -65,12 +65,30 @@ def main():
         RADIUS
     )
     
-    # Print statistics
+    # print statistics
     print_dataset_statistics(df, "Data Collection Complete")
     
-    # Save to CSV
+    # save to csv
     df.to_csv(DATASET_PATH, index=False)
     print(f"\nDataset saved to: {DATASET_PATH}")
+    
+    # train classifier
+    print("\n" + "="*60)
+    print("TRAINING CLASSIFIER")
+    print("="*60)
+    
+    csv_paths = [
+        os.path.join(BASE_PATH, "grasp_dataset_cube.csv"),
+        os.path.join(BASE_PATH, "grasp_dataset_duck.csv")
+    ]
+    
+    csv_paths = [p for p in csv_paths if os.path.exists(p)]
+    
+    # load in csv to pandas df
+    balanced_df = load_dataset(csv_paths)
+    print(f"Balanced dataset: {len(balanced_df)} samples ({balanced_df['success'].sum()} positive)")
+    
+    clf, features = train_classifier(balanced_df, MODEL_PATH)
     
     # cleanup
     print("\nSimulation complete. Closing in 3 seconds...")
