@@ -115,12 +115,12 @@ if __name__=="__main__":
     print("="*60)
     
     combinations = [
-        (TwoFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025)),
-        (ThreeFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025)),
-        (TwoFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02)),
-        (ThreeFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02)),
+        (TwoFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025), joblib.load(MODEL_PATHS[0])),
+        (ThreeFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025), joblib.load(MODEL_PATHS[1])),
+        (TwoFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02), joblib.load(MODEL_PATHS[2])),
+        (ThreeFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02), joblib.load(MODEL_PATHS[3])),
     ]
     
-    for gripper_class, obj_class, urdf, position in combinations:
+    for gripper_class, obj_class, urdf, position, clf in combinations:
         print(f"\n--- {gripper_class.__name__} + {obj_class.__name__} ---")
         test_classifier(clf, features, gripper_class, obj_class, urdf, position, num_tests=10)

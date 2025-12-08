@@ -10,6 +10,7 @@ import time
 import os
 import numpy as np
 import pandas as pd
+import joblib
 
 from SceneObject import Cube, Duck
 from Gripper import TwoFingerGripper, ThreeFingerGripper
@@ -34,15 +35,16 @@ from classify import (
 def main():
     global CUBE_URDF, DUCK_URDF
     
+    # setup environment
+    print("Setting up PyBullet environment...")
+    setup_environment(gui=USE_GUI)
+    
     # If local URDFs don't exist, use pybullet_data
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
     if not os.path.exists(CUBE_URDF):
         CUBE_URDF = "cube_small.urdf"
     if not os.path.exists(DUCK_URDF):
         DUCK_URDF = "duck_vhacd.urdf"
-    
-    # setup environment
-    print("Setting up PyBullet environment...")
-    setup_environment(gui=USE_GUI)
     
     all_data = []
     
