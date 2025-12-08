@@ -80,12 +80,12 @@ class Cube(SceneObject):
         return self.half_extent * 1.5 + 0.08
 
 
-class Cylinder(SceneObject):
-    """Cylinder object for grasping experiments."""
+class Duck(SceneObject):
+    """Duck object for grasping experiments."""
     
     def __init__(self, urdf, position=(0, 0, 0), orientation=(1.5708, 0, 0), scale=1.5):
         super().__init__(urdf, position, orientation, scale)
-        self.name = "Cylinder"
+        self.name = "Duck"
         self.id = self.load()
         self._compute_grasp_params()
         

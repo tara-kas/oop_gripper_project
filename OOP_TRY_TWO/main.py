@@ -11,13 +11,13 @@ import os
 import numpy as np
 import pandas as pd
 
-from SceneObject import Cube, Cylinder
+from SceneObject import Cube, Duck
 from Gripper import TwoFingerGripper, ThreeFingerGripper
 
 from config import (
     BASE_PATH, CUBE_URDF, DUCK_URDF, 
     SAMPLES_PER_COMBINATION, RADIUS, USE_GUI,
-    DATASET_PATH, MODEL_PATH, setup_environment
+    MODEL_PATHS, setup_environment
 )
 
 from data_collection import (
@@ -28,7 +28,6 @@ from data_collection import (
 from classify import (
     load_dataset,
     train_classifier,
-    predict_grasp
 )
 
 def main():
@@ -50,7 +49,7 @@ def main():
     gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
     object_configs = [
         (Cube, CUBE_URDF, (0, 0, 0.025)),      # Cube at origin
-        # (Duck, duck_urdf, (0, 0, 0.02))  # Cylinder at origin
+        (Duck, DUCK_URDF, (0, 0, 0.02))        # Duck at origin
     ]
     
     # collect data
@@ -58,37 +57,32 @@ def main():
     print("DATA COLLECTION")
     print("="*60)
     
-    df = collect_all_training_data(
+    dfs = collect_all_training_data(
         gripper_classes,
         object_configs,
         SAMPLES_PER_COMBINATION,
         RADIUS
     )
     
-    # print statistics
-    print_dataset_statistics(df, "Data Collection Complete")
-    
-    # save to csv
-    df.to_csv(DATASET_PATH, index=False)
-    print(f"\nDataset saved to: {DATASET_PATH}")
+    # save to csv and print statistics for each df
+    csv_paths = []
+    for key, df in dfs.items():
+        print_dataset_statistics(df, f"{key} Statistics")
+        path = os.path.join(BASE_PATH, f"grasp_dataset_{key}.csv")
+        df.to_csv(path, index=False)
+        csv_paths.append(path)
+        print(f"Saved: {path}")
     
     # train classifier
     print("\n" + "="*60)
     print("TRAINING CLASSIFIER")
     print("="*60)
-    
-    csv_paths = [
-        os.path.join(BASE_PATH, "grasp_dataset_cube.csv"),
-        os.path.join(BASE_PATH, "grasp_dataset_duck.csv")
-    ]
-    
-    csv_paths = [p for p in csv_paths if os.path.exists(p)]
-    
+
     # load in csv to pandas df
-    balanced_df = load_dataset(csv_paths)
-    print(f"Balanced dataset: {len(balanced_df)} samples ({balanced_df['success'].sum()} positive)")
-    
-    clf, features = train_classifier(balanced_df, MODEL_PATH)
+    for i, csv_path in enumerate(csv_paths):
+        balanced_df = load_dataset(csv_path)
+        print(f"Balanced dataset for {csv_path}: {len(balanced_df)} samples ({balanced_df['success'].sum()} positive)")
+        clf, features = train_classifier(balanced_df, MODEL_PATHS[i])
     
     # cleanup
     print("\nSimulation complete. Closing in 3 seconds...")
@@ -98,7 +92,7 @@ def main():
     
     p.disconnect()
     
-    return df
+    # return dfs
 
 if __name__ == "__main__":
     df = main()

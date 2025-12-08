@@ -111,7 +111,7 @@ def collect_all_training_data(gripper_classes, object_configs, samples_per_combi
     Returns:
         DataFrame with all collected data
     """
-    all_data = []
+    all_data = {}
     
     for gripper_class in gripper_classes:
         for obj_class, urdf, position in object_configs:
@@ -128,11 +128,12 @@ def collect_all_training_data(gripper_classes, object_configs, samples_per_combi
                 radius=radius,
                 add_noise=True
             )
-            all_data.extend(data)
+            key = f"{gripper_class.__name__}_{obj_class.__name__}"
+            all_data[key] = pd.DataFrame(data)
             
             p.removeBody(obj.id)
     
-    return pd.DataFrame(all_data)
+    return all_data
 
 
 def print_dataset_statistics(df, title="Dataset Statistics"):

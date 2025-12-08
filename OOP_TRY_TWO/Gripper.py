@@ -206,10 +206,7 @@ class Gripper(ABC):
         
         self._position = lift_pos
         
-        # Step 6: Hold and check success
-
-        
-        # Step 7: Retract back to starting position
+        # Step 6: Retract back to starting position and check success if held on for at least 3s
         success = self._retract_to(start_pos, obj, start_orn, hold_time) 
         
         return success
@@ -259,7 +256,7 @@ class Gripper(ABC):
         """Apply continuous grip force during lifting."""
         pass
     
-    def _check_grasp_success(self, obj, hold_time=3.0, max_distance=0.35):
+    def _check_grasp_success(self, obj, hold_time=3.0, max_distance=0.36):
         steps = int(hold_time * 240)
         
         for _ in range(steps):

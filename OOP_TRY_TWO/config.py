@@ -9,13 +9,15 @@ CUBE_URDF = os.path.join(BASE_PATH, "objects", "cube_small.urdf")
 DUCK_URDF = os.path.join(BASE_PATH, "objects", "duck_vhacd.urdf")
 
 # for data collection
-SAMPLES_PER_COMBINATION = 100
+SAMPLES_PER_COMBINATION = 3
 RADIUS = 2                     # distance from object for starting position
 USE_GUI = False                 # whether to use GUI mode
 
-# output paths
-DATASET_PATH = os.path.join(BASE_PATH, "grasp_dataset_twfg_cube.csv")        # change from "twfg" to "thfg" OR "cube" to "duck"
-MODEL_PATH = os.path.join(BASE_PATH, "grasp_twfg_cube_classifier.pkl")       # ^
+# output path for clf
+MODEL_PATHS = [os.path.join(BASE_PATH, "grasp_classifier_two_cube.pkl"),
+              os.path.join(BASE_PATH, "grasp_classifier_two_duck.pkl"),
+              os.path.join(BASE_PATH, "grasp_classifier_three_cube.pkl"),
+              os.path.join(BASE_PATH, "grasp_classifier_three_duck.pkl")]
 
 def setup_environment(gui=None):
     """
