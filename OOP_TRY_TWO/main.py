@@ -13,6 +13,7 @@ import pandas as pd
 
 from SceneObject import Cube, Duck
 from Gripper import TwoFingerGripper, ThreeFingerGripper
+from test import test_classifier
 
 from config import (
     BASE_PATH, CUBE_URDF, DUCK_URDF, 
@@ -46,10 +47,10 @@ def main():
     all_data = []
     
     # Define gripper-object combinations
-    gripper_classes = [TwoFingerGripper]
+    gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
     object_configs = [
         (Cube, CUBE_URDF, (0, 0, 0.025)),      # Cube at origin
-        # (Duck, DUCK_URDF, (0, 0, 0.02))        # Duck at origin
+        (Duck, DUCK_URDF, (0, 0, 0.02))        # Duck at origin
     ]
     
     # collect data
@@ -82,7 +83,24 @@ def main():
     for i, csv_path in enumerate(csv_paths):
         balanced_df = load_dataset(csv_path)
         print(f"Balanced dataset for {csv_path}: {len(balanced_df)} samples ({balanced_df['success'].sum()} positive)")
+        # train and validate classifier
         clf, features = train_classifier(balanced_df, MODEL_PATHS[i])
+    
+    # test the classification model
+    print("\n" + "="*60)
+    print("TESTING CLASSIFIER")
+    print("="*60)
+    
+    combinations = [
+        (TwoFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025)),
+        (ThreeFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025)),
+        (TwoFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02)),
+        (ThreeFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02)),
+    ]
+    
+    for gripper_class, obj_class, urdf, position in combinations:
+        print(f"\n--- {gripper_class.__name__} + {obj_class.__name__} ---")
+        test_classifier(clf, features, gripper_class, obj_class, urdf, position, num_tests=10)
     
     # cleanup
     print("\nSimulation complete. Closing in 3 seconds...")

@@ -31,10 +31,10 @@ def train_classifier(df, model_path=None):
     
     # hyperparam tuning
     clf = RandomForestClassifier(
-        # n_estimators=500,      # no. of trees
-        # max_depth=15,        # tree depth
-        # min_samples_split=3,   # min samples to split node
-        # min_samples_leaf=1,    # min samples per leaf
+        n_estimators=100,      # no. of trees
+        max_depth=10,        # tree depth
+        min_samples_split=2,   # min samples to split node
+        min_samples_leaf=1,    # min samples per leaf
         random_state=42)
     
     clf.fit(X_train, Y_train)
