@@ -46,10 +46,10 @@ def main():
     all_data = []
     
     # Define gripper-object combinations
-    gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
+    gripper_classes = [TwoFingerGripper]
     object_configs = [
         (Cube, CUBE_URDF, (0, 0, 0.025)),      # Cube at origin
-        (Duck, DUCK_URDF, (0, 0, 0.02))        # Duck at origin
+        # (Duck, DUCK_URDF, (0, 0, 0.02))        # Duck at origin
     ]
     
     # collect data

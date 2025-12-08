@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import joblib
 
+from config import MODEL_PATHS
+
 def load_dataset(csv_path):
     # csv_path is type list so iterate over and concat
     df = pd.read_csv(csv_path)
@@ -29,10 +31,10 @@ def train_classifier(df, model_path=None):
     
     # hyperparam tuning
     clf = RandomForestClassifier(
-        n_estimators=100,      # no. of trees
-        max_depth=None,        # tree depth
-        min_samples_split=2,   # min samples to split node
-        min_samples_leaf=1,    # min samples per leaf
+        # n_estimators=500,      # no. of trees
+        # max_depth=15,        # tree depth
+        # min_samples_split=3,   # min samples to split node
+        # min_samples_leaf=1,    # min samples per leaf
         random_state=42)
     
     clf.fit(X_train, Y_train)
@@ -46,3 +48,10 @@ def train_classifier(df, model_path=None):
         print(f"model saved to {model_path}")
         
     return clf, features
+
+if __name__ == "__main__":
+    csv_paths = ["grasp_dataset_TwoFingerGripper_Cube.csv", "grasp_dataset_TwoFingerGripper_Duck.csv", "grasp_dataset_ThreeFingerGripper_Cube.csv", "grasp_dataset_ThreeFingerGripper_Duck.csv"]
+    for i, csv_path in enumerate(csv_paths):
+        balanced_df = load_dataset(csv_path)
+        print(f"Balanced dataset for {csv_path}: {len(balanced_df)} samples ({balanced_df['success'].sum()} positive)")
+        clf, features = train_classifier(balanced_df, MODEL_PATHS[i])
