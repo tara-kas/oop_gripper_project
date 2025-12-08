@@ -83,7 +83,7 @@ def main():
     for i, csv_path in enumerate(csv_paths):
         balanced_df = load_dataset(csv_path)
         print(f"Balanced dataset for {csv_path}: {len(balanced_df)} samples ({balanced_df['success'].sum()} positive)")
-        # train and validate classifier
+        # train and validate classifier w/ same hyperparams (if you want each to be uniquely tuned, run classify.py)
         clf, features = train_classifier(balanced_df, MODEL_PATHS[i])
     
     # test the classification model

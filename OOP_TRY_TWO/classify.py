@@ -50,8 +50,10 @@ def train_classifier(df, model_path=None):
     return clf, features
 
 if __name__ == "__main__":
-    csv_paths = ["grasp_dataset_TwoFingerGripper_Cube.csv", "grasp_dataset_TwoFingerGripper_Duck.csv", "grasp_dataset_ThreeFingerGripper_Cube.csv", "grasp_dataset_ThreeFingerGripper_Duck.csv"]
+    # tune each combination w/ own hyperparams
+    csv_paths = ["grasp_dataset_TwoFingerGripper_Cube.csv"]
+    # csv_paths = ["grasp_dataset_TwoFingerGripper_Cube.csv", "grasp_dataset_TwoFingerGripper_Duck.csv", "grasp_dataset_ThreeFingerGripper_Cube.csv", "grasp_dataset_ThreeFingerGripper_Duck.csv"]
     for i, csv_path in enumerate(csv_paths):
         balanced_df = load_dataset(csv_path)
         print(f"Balanced dataset for {csv_path}: {len(balanced_df)} samples ({balanced_df['success'].sum()} positive)")
-        clf, features = train_classifier(balanced_df, MODEL_PATHS[i])
+        clf, features = train_classifier(balanced_df, MODEL_PATHS[0])
