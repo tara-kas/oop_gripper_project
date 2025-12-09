@@ -1,19 +1,20 @@
 """
 Grasp Data Collection Pipeline
-Generates grasp dataset by sampling random gripper poses and testing grasp success.
+Generates grasp dataset by sampling random gripper poses and testing grasp success. Setup environment and define gripper-object 
+combinations -> collect and split data -> train classifier -> collect results.
 """
-
-import math
+# import all libraries
 import pybullet as p
 import pybullet_data
 import time
 import os
-import numpy as np
-import pandas as pd
 import joblib
 
+# import classes
 from SceneObject import Cube, Duck
 from Gripper import TwoFingerGripper, ThreeFingerGripper
+
+# import constants and methods
 from test import test_classifier
 
 from config import (
@@ -21,7 +22,6 @@ from config import (
     SAMPLES_PER_COMBINATION, RADIUS, USE_GUI,
     MODEL_PATHS, setup_environment
 )
-
 from data_collection import (
     collect_all_training_data,
     print_dataset_statistics
@@ -45,8 +45,6 @@ def main():
         CUBE_URDF = "cube_small.urdf"
     if not os.path.exists(DUCK_URDF):
         DUCK_URDF = "duck_vhacd.urdf"
-    
-    all_data = []
     
     # Define gripper-object combinations
     gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
@@ -93,18 +91,20 @@ def main():
     print("TESTING CLASSIFIER")
     print("="*60)
     
+    # combs to test
     combinations = [
-        (TwoFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025)),
-        (ThreeFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025)),
-        (TwoFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02)),
-        (ThreeFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02)),
+        (TwoFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025), joblib.load(MODEL_PATHS[0])),
+        (ThreeFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025), joblib.load(MODEL_PATHS[1])),
+        (TwoFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02), joblib.load(MODEL_PATHS[2])),
+        (ThreeFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02), joblib.load(MODEL_PATHS[3])),
     ]
     
-    for gripper_class, obj_class, urdf, position in combinations:
+    for gripper_class, obj_class, urdf, position, clf in combinations:
         print(f"\n--- {gripper_class.__name__} + {obj_class.__name__} ---")
+        # tests and get confusion matrix saved as an image
         test_classifier(clf, features, gripper_class, obj_class, urdf, position, num_tests=10)
     
-    # cleanup
+    # cleanup and close
     print("\nSimulation complete. Closing in 3 seconds...")
     for _ in range(int(3 * 240)):
         p.stepSimulation()
@@ -112,7 +112,7 @@ def main():
     
     p.disconnect()
     
-    # return dfs
+    return dfs
 
 if __name__ == "__main__":
-    df = main()
+    dfs = main()
