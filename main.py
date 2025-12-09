@@ -1,113 +1,118 @@
+"""
+Grasp Data Collection Pipeline
+Generates grasp dataset by sampling random gripper poses and testing grasp success. Setup environment and define gripper-object 
+combinations -> collect and split data -> train classifier -> collect results.
+"""
+# import all libraries
 import pybullet as p
 import pybullet_data
 import time
-import math
-from SceneObject import SceneObject, Cube, Cylinder
-from Gripper import Gripper, TwoFingerGripper, ThreeFingerGripper
 import os
-import numpy as np
+import joblib
 
-if __name__=="__main__":
-    # load in "cube_small.urdf" from objects folder using its path
-    cube_path = os.path.join(os.path.dirname(__file__), "objects", "cube_small.urdf")
-    cyl_path = os.path.join(os.path.dirname(__file__), "objects", "cylinder.urdf")
-    print(cube_path)
+# import classes
+from SceneObject import Cube, Duck
+from Gripper import TwoFingerGripper, ThreeFingerGripper
+
+# import constants and methods
+from test import test_classifier
+
+from config import (
+    BASE_PATH, CUBE_URDF, DUCK_URDF, 
+    SAMPLES_PER_COMBINATION, RADIUS, USE_GUI,
+    MODEL_PATHS, setup_environment
+)
+from data_collection import (
+    collect_all_training_data,
+    print_dataset_statistics
+)
+
+from classify import (
+    load_dataset,
+    train_classifier,
+)
+
+def main():
+    global CUBE_URDF, DUCK_URDF
     
-    # setup the environment
-    p.connect(p.GUI)
+    # setup environment
+    print("Setting up PyBullet environment...")
+    setup_environment(gui=USE_GUI)
+    
+    # If local URDFs don't exist, use pybullet_data
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    p.resetSimulation()
-    p.setGravity(0, 0, -9.81)
-    p.setRealTimeSimulation(0)
-    # p.addUserDebugLine((0,0,0)) finish adding the params
+    if not os.path.exists(CUBE_URDF):
+        CUBE_URDF = "cube_small.urdf"
+    if not os.path.exists(DUCK_URDF):
+        DUCK_URDF = "duck_vhacd.urdf"
     
-    # uncomment to change camera angle:
-    # p.resetDebugVisualizerCamera(
-    # cameraDistance = 1.5,
-    # cameraYaw = 50,
-    # cameraPitch = -35,
-    # cameraTargetPosition = [0,0,0]
-    # )
+    # Define gripper-object combinations
+    gripper_classes = [TwoFingerGripper, ThreeFingerGripper]
+    object_configs = [
+        (Cube, CUBE_URDF, (0, 0, 0.025)),      # Cube at origin
+        (Duck, DUCK_URDF, (0, 0, 0.02))        # Duck at origin
+    ]
+    
+    # collect data
+    print("\n" + "="*60)
+    print("DATA COLLECTION")
+    print("="*60)
+    
+    dfs = collect_all_training_data(
+        gripper_classes,
+        object_configs,
+        SAMPLES_PER_COMBINATION,
+        RADIUS
+    )
+    
+    # save to csv and print statistics for each df
+    csv_paths = []
+    for key, df in dfs.items():
+        print_dataset_statistics(df, f"{key} Statistics")
+        path = os.path.join(BASE_PATH, f"grasp_dataset_{key}.csv")
+        df.to_csv(path, index=False)
+        csv_paths.append(path)
+        print(f"Saved: {path}")
+    
+    # train classifier
+    print("\n" + "="*60)
+    print("TRAINING CLASSIFIER")
+    print("="*60)
 
-    n = 5  # no. of iterations
-    grippers = {}   # initialise the grippers
+    # load in csv to pandas df
+    for i, csv_path in enumerate(csv_paths):
+        balanced_df = load_dataset(csv_path)
+        print(f"Balanced dataset for {csv_path}: {len(balanced_df)} samples ({balanced_df['success'].sum()} positive)")
+        # train and validate classifier w/ same hyperparams (if you want each to be uniquely tuned, run classify.py)
+        clf, features = train_classifier(balanced_df, MODEL_PATHS[i])
     
-    planeID = p.loadURDF("plane.urdf")
+    # test the classification model
+    print("\n" + "="*60)
+    print("TESTING CLASSIFIER")
+    print("="*60)
     
-    boxID = Cube(cube_path,(0,0,0.05))  # z is half the height of the cube
- 
-    xyz = tuple(Gripper.get_random_start_position())  # convert numpy array to tuple
-    # rpy = (0, 0, 0)   
-    rpy = Gripper.orient_towards_origin(xyz, random_roll=False)
+    # combs to test
+    combinations = [
+        (TwoFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025), joblib.load(MODEL_PATHS[0])),
+        (ThreeFingerGripper, Cube, CUBE_URDF, (0, 0, 0.025), joblib.load(MODEL_PATHS[1])),
+        (TwoFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02), joblib.load(MODEL_PATHS[2])),
+        (ThreeFingerGripper, Duck, DUCK_URDF, (0, 0, 0.02), joblib.load(MODEL_PATHS[3])),
+    ]
     
-    gripper1 = TwoFingerGripper(xyz, rpy)
+    for gripper_class, obj_class, urdf, position, clf in combinations:
+        print(f"\n--- {gripper_class.__name__} + {obj_class.__name__} ---")
+        # tests and get confusion matrix saved as an image
+        test_classifier(clf, features, gripper_class, obj_class, urdf, position, num_tests=10)
     
-    # OBJECT 1: CUBE
-    for i in range(n):
-        xyz = Gripper.get_random_start_position()
-        rpy = Gripper.orient_towards_origin(xyz)
-        xyz.tolist()
-        gripper = TwoFingerGripper(xyz,rpy)
-        print(xyz)
-        print(rpy)
-        gripper.load()
-        gripper.teleport(obj_id=boxID.id, offset=boxID.grasp_offset)
-        print(f"trial {i+1} w/ cube")
-        # time.sleep(1)
-        # open gripper
-        gripper.grasp_and_lift(boxID)
-        print(f"{gripper.position} after grasp and lift")
-       
-        # ADD LOGIC result (success or failure) into dict
-        grippers[gripper] = None
-        
-         # reset cube to origin after gripper is done
-        boxID.position = (0, 0, 0.05)
-        p.resetBasePositionAndOrientation(boxID.id, boxID.position, boxID.orientation)
-        
-        p.removeBody(gripper.id)
-
-        # move closer a bit
-        # close gripper
-        # move away
-    
-    p.removeBody(boxID.id)
-        
-    # OBJECT 2: CLYINDER
-    cylID = Cylinder(cyl_path,(0,0,0.02))
-    
-    for i in range(n):
-        xyz = Gripper.get_random_start_position()
-        rpy = Gripper.orient_towards_origin(xyz)
-        xyz.tolist()
-        gripper = TwoFingerGripper(xyz,rpy)
-        print(xyz)
-        print(rpy)
-        gripper.load()
-        gripper.teleport(obj_id=cylID.id, offset=cylID.grasp_offset)
-        print(f"trial {i+1} w/ cylinder")
-        # time.sleep(1)
-        # open gripper
-        gripper.grasp_and_lift(cylID)
-        
-        # ADD LOGIC result (success or failure) into dict
-        grippers[gripper] = None
-        
-        # reset cylinder to origin after gripper is done
-        cylID.position = (0, 0, 0.02)
-        p.resetBasePositionAndOrientation(cylID.id, cylID.position, cylID.orientation)
-        
-        p.removeBody(gripper.id)
-        
-    p.removeBody(cylID.id)
-
-    print(grippers)
-
-    
-    for i in range(1000):
+    # cleanup and close
+    print("\nSimulation complete. Closing in 3 seconds...")
+    for _ in range(int(3 * 240)):
         p.stepSimulation()
         time.sleep(1./240.)
     
     p.disconnect()
     
-    
+    return dfs
+
+if __name__ == "__main__":
+    dfs = main()
