@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 import joblib
 
 from config import MODEL_PATHS
@@ -31,10 +31,10 @@ def train_classifier(df, model_path=None):
     
     # hyperparam tuning
     clf = RandomForestClassifier(
-        n_estimators=100,      # no. of trees
-        max_depth=10,        # tree depth
-        min_samples_split=2,   # min samples to split node
-        min_samples_leaf=1,    # min samples per leaf
+        n_estimators=300,      # no. of trees
+        max_depth=40,        # tree depth
+        min_samples_split=10,   # min samples to split node
+        min_samples_leaf=3,    # min samples per leaf
         random_state=42)
     
     clf.fit(X_train, Y_train)
@@ -47,13 +47,19 @@ def train_classifier(df, model_path=None):
         joblib.dump(clf, model_path)
         print(f"model saved to {model_path}")
         
+    # making confusion matrix
+    cm = confusion_matrix(Y_test, clf.predict(X_test))
+    cm_disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    cm_disp.plot().figure_.savefig(f'{model_path}_confusion_matrix.png')
+    print(f"Confusion Matrix image saved to {model_path})confusion_matrix.png")
+        
     return clf, features
 
 if __name__ == "__main__":
     # tune each combination w/ own hyperparams
-    csv_paths = ["grasp_dataset_TwoFingerGripper_Cube.csv"]
+    csv_paths = ["grasp_dataset_ThreeFingerGripper_Duck.csv"]
     # csv_paths = ["grasp_dataset_TwoFingerGripper_Cube.csv", "grasp_dataset_TwoFingerGripper_Duck.csv", "grasp_dataset_ThreeFingerGripper_Cube.csv", "grasp_dataset_ThreeFingerGripper_Duck.csv"]
     for i, csv_path in enumerate(csv_paths):
         balanced_df = load_dataset(csv_path)
         print(f"Balanced dataset for {csv_path}: {len(balanced_df)} samples ({balanced_df['success'].sum()} positive)")
-        clf, features = train_classifier(balanced_df, MODEL_PATHS[0])
+        clf, features = train_classifier(balanced_df, MODEL_PATHS[3])
