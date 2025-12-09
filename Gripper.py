@@ -5,11 +5,11 @@ import math
 import numpy as np
 from abc import ABC, abstractmethod
 
-
 class Gripper(ABC):
     """Abstract base class for robotic grippers."""
     
     def __init__(self, urdf, position=(0, 0, 0), orientation=(0, 0, 0)):
+        # initialise all variables
         self.urdf = urdf
         self._position = np.array(position, dtype=float)
         self._orientation_euler = np.array(orientation, dtype=float)
@@ -19,22 +19,22 @@ class Gripper(ABC):
         self.name = "Gripper"
         
     @property
-    def position(self):
+    def position(self):     # gets position
         return tuple(self._position)
     
     @position.setter
-    def position(self, value):
+    def position(self, value):  # sets position
         self._position = np.array(value, dtype=float)
         
     @property
-    def orientation_euler(self):
+    def orientation_euler(self):    # gets orientation in euler form
         return tuple(self._orientation_euler)
     
-    @property
+    @property                       # gets orientation in quaternion form
     def orientation_quat(self):
         return self._orientation_quat
     
-    @orientation_quat.setter
+    @orientation_quat.setter        # sets orientation in quaternion form
     def orientation_quat(self, value):
         self._orientation_quat = value
         self._orientation_euler = np.array(p.getEulerFromQuaternion(value))
@@ -90,11 +90,13 @@ class Gripper(ABC):
         else:
             orientation_euler = np.array(orientation_euler)
             
+        # define target to move to
         target_pos = np.array(position)
         start_pos = self._position.copy()
         start_orn = self._orientation_euler.copy()
         
         for i in range(steps):
+            # move in steps
             t = (i + 1) / steps
             interp_pos = start_pos + t * (target_pos - start_pos)
             interp_orn = start_orn + t * (orientation_euler - start_orn)
@@ -112,22 +114,22 @@ class Gripper(ABC):
         self._orientation_euler = orientation_euler
         self._orientation_quat = p.getQuaternionFromEuler(orientation_euler)
     
-    def teleport_to(self, position, orientation_euler=None):
-        """Instantly move gripper to position (no simulation steps)."""
-        self._position = np.array(position)
-        if orientation_euler is not None:
-            self._orientation_euler = np.array(orientation_euler)
-            self._orientation_quat = p.getQuaternionFromEuler(orientation_euler)
+    # def teleport_to(self, position, orientation_euler=None):
+    #     """Instantly move gripper to position (no simulation steps)."""
+    #     self._position = np.array(position)
+    #     if orientation_euler is not None:
+    #         self._orientation_euler = np.array(orientation_euler)
+    #         self._orientation_quat = p.getQuaternionFromEuler(orientation_euler)
         
-        p.resetBasePositionAndOrientation(self.id, self._position, self._orientation_quat)
+    #     p.resetBasePositionAndOrientation(self.id, self._position, self._orientation_quat)
         
-        if self.constraint_id is not None:
-            p.changeConstraint(
-                self.constraint_id,
-                jointChildPivot=list(self._position),
-                jointChildFrameOrientation=self._orientation_quat,
-                maxForce=100
-            )
+    #     if self.constraint_id is not None:
+    #         p.changeConstraint(
+    #             self.constraint_id,
+    #             jointChildPivot=list(self._position),
+    #             jointChildFrameOrientation=self._orientation_quat,
+    #             maxForce=100
+    #         )
     
     def grasp_and_lift(self, obj, approach_offset=0.15, lift_height=0.3, hold_time=3.0):
         """
@@ -165,25 +167,25 @@ class Gripper(ABC):
         grasp_pos = obj_pos + direction_from_obj * grasp_offset_distance
         grasp_pos[2] = obj.grasp_height
         
-        # Step 1: Open gripper (fast)
+        # Step 1: Open gripper
         self.open()
         for _ in range(10):
             p.stepSimulation()
             time.sleep(1./240.)
         
-        # Step 2: Move to approach pose (fast)
+        # Step 2: Move to approach pose
         self.move_to(approach_pos, steps=25)
         
-        # Step 3: Move to grasp pose (fast)
+        # Step 3: Move to grasp pose
         self.move_to(grasp_pos, steps=20)
         
-        # Step 4: Close gripper (fast)
+        # Step 4: Close gripper
         self.close()
         for _ in range(50):
             p.stepSimulation()
             time.sleep(1./240.)
         
-        # Step 5: Lift while maintaining grip (faster)
+        # Step 5: Lift while maintaining grip
         lift_pos = grasp_pos.copy()
         lift_pos[2] = lift_height
         
@@ -284,7 +286,7 @@ class Gripper(ABC):
         # Relative position
         rel_pos = np.array(gripper_pos) - np.array(obj_pos)
         
-        # Relative orientation (simplified - just use gripper orientation)
+        # Relative orientation
         gripper_euler = p.getEulerFromQuaternion(gripper_orn)
         
         return (*rel_pos, *gripper_euler)

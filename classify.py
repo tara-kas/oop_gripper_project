@@ -1,6 +1,9 @@
-# grasp classifier model using Random Forest
+"""
+grasp classifier model using Random Forest.
+First load dataset from csv path and balance it so there are equal success/failure samples. Then train RF classifier and tune
+hyperparameters. Save classifier to a path and then use it to make a confusion matrix from test set.
+"""
 import pandas as pd
-import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
@@ -37,15 +40,17 @@ def train_classifier(df, model_path=None):
         min_samples_leaf=3,    # min samples per leaf
         random_state=42)
     
+    # train model w/ chosen hyperparams
     clf.fit(X_train, Y_train)
     
+    # calculate train and test accuracies
     train_acc = accuracy_score(Y_train, clf.predict(X_train))
     test_acc = accuracy_score(Y_test, clf.predict(X_test))
     print(f"Train accuracy: {train_acc*100:.1f}%, Validation accuracy: {test_acc*100:.1f}%")
     
     if model_path:
         joblib.dump(clf, model_path)
-        print(f"model saved to {model_path}")
+        print(f"model saved to {model_path}")       # save clf to path
         
     # making confusion matrix
     cm = confusion_matrix(Y_test, clf.predict(X_test))

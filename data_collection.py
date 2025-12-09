@@ -1,4 +1,8 @@
-""" grasp data collection functions"""
+""" 
+grasp data collection functions. _collect_grasp_data runs trials for specific gripper-object combination. 
+Used by collect_all_training_data to run for all combinations.
+print_dataset_statistics is a helper print function.
+"""
 
 import pybullet as p
 import numpy as np
@@ -53,6 +57,7 @@ def _collect_grasp_data(gripper_class, obj, num_samples, radius=1, add_noise=Tru
         rot_matrix = p.getMatrixFromQuaternion(gripper_orn)
         z_axis = np.array([rot_matrix[2], rot_matrix[5], rot_matrix[8]]) 
         z_end = np.array(gripper_pos) + z_axis * 0.2
+        # add trajectory line
         p.addUserDebugLine(gripper_pos, z_end, [0, 0, 1], 3, lifeTime=10)  
         p.addUserDebugLine(gripper_pos, obj.position, [1, 0, 0], 2, lifeTime=10) 
 
@@ -113,6 +118,7 @@ def collect_all_training_data(gripper_classes, object_configs, samples_per_combi
     """
     all_data = {}
     
+    # for each combination:
     for gripper_class in gripper_classes:
         for obj_class, urdf, position in object_configs:
             print(f"\n{'#'*60}")
@@ -121,6 +127,7 @@ def collect_all_training_data(gripper_classes, object_configs, samples_per_combi
             
             obj = obj_class(urdf, position=position)
             
+            # collect data
             data = _collect_grasp_data(
                 gripper_class,
                 obj,
@@ -129,7 +136,7 @@ def collect_all_training_data(gripper_classes, object_configs, samples_per_combi
                 add_noise=True
             )
             key = f"{gripper_class.__name__}_{obj_class.__name__}"
-            all_data[key] = pd.DataFrame(data)
+            all_data[key] = pd.DataFrame(data)      # add to a dict
             
             p.removeBody(obj.id)
     

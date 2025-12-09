@@ -15,18 +15,18 @@ class SceneObject(ABC):
         self.name = "SceneObject"
         
     @property
-    def position(self):
+    def position(self):     # get position
         return self._position
     
-    @position.setter
+    @position.setter        # set position
     def position(self, value):
         self._position = value
         
     @property
-    def orientation(self):
+    def orientation(self):  # get orientation
         return self._orientation_quat
     
-    @orientation.setter
+    @orientation.setter     # set orientation (euler or quaternion)
     def orientation(self, value):
         if len(value) == 3:
             self._orientation_euler = value

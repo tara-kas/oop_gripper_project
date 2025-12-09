@@ -11,7 +11,7 @@ DUCK_URDF = os.path.join(BASE_PATH, "objects", "duck_vhacd.urdf")
 # for data collection
 SAMPLES_PER_COMBINATION = 250
 RADIUS = 2                     # distance from object for starting position
-USE_GUI = False                 # whether to use GUI mode
+USE_GUI = False                # whether to use GUI mode
 
 # output path for clf
 MODEL_PATHS = [os.path.join(BASE_PATH, "grasp_classifier_two_cube.pkl"),

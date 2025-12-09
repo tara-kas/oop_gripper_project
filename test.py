@@ -1,12 +1,11 @@
 """testing phase: evaluate classifier predictions against actual grasp execution."""
 
-import os
 import pybullet as p
 import numpy as np
 import joblib
 import time
 
-from config import BASE_PATH, CUBE_URDF, DUCK_URDF, RADIUS, setup_environment, MODEL_PATHS
+from config import CUBE_URDF, DUCK_URDF, RADIUS, setup_environment, MODEL_PATHS
 from SceneObject import Cube, Duck
 from Gripper import TwoFingerGripper, ThreeFingerGripper
 
@@ -105,6 +104,8 @@ def test_classifier(clf, features, gripper_class, obj_class, obj_urdf, obj_posit
     return {'accuracy': accuracy, 'correct': correct, 'total': num_tests, 'results': results}
 
 if __name__=="__main__":
+    """this was just for testing w/out rerunning main.py which creates all the datasets again.
+       run this file to only test the pre-ran classifiers."""
     
     setup_environment(gui=False)
     features = ['rel_x', 'rel_y', 'rel_z', 'roll', 'pitch', 'yaw']
